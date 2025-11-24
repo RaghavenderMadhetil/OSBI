@@ -192,22 +192,6 @@
 										"value": "End",
 										"type": "String"
 									},
-									"RunId": {
-										"value": "@pipeline().RunId",
-										"type": "Guid"
-									},
-									"PipelineName": {
-										"value": "@pipeline().Pipeline",
-										"type": "String"
-									},
-									"ActivityName": {
-										"value": "'CopyFileToRaw'",
-										"type": "String"
-									},
-									"FileName": {
-										"value": "@item().name",
-										"type": "String"
-									},
 									"TargetPath": {
 										"value": {
 											"value": "@concat('raw/', item().name)",
