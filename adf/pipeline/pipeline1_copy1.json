@@ -265,7 +265,10 @@
 								"storedProcedureName": "[dbo].[usp_UpsertPipelineFileAudit]",
 								"storedProcedureParameters": {
 									"Action": {
-										"value": "'Start'",
+										"value": {
+											"value": "\"Start\"",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"RunId": {
