@@ -64,6 +64,8 @@
 			{
 				"name": "ProcessEachCSV",
 				"type": "ForEach",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "OnlyCSVs",

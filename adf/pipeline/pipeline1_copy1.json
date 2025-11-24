@@ -209,17 +209,17 @@
 									},
 									"RowCount": {
 										"value": {
-											"value": "@activity('CopyFileToRaw').output.filesWritten",
+											"value": "@if(\n  or(equals(activity('CopyFileToRaw').Status,'Failed'), equals(activity('CopyFileToRaw').output.filesWritten, null)),\n  null,\n  int(activity('CopyFileToRaw').output.filesWritten)\n)\n",
 											"type": "Expression"
 										},
 										"type": "Int64"
 									},
 									"FileSizeBytes": {
 										"value": {
-											"value": "\n\n@activity('CopyFileToRaw').output.dataWritten",
+											"value": "@if(\n  or(equals(activity('CopyFileToRaw').Status,'Failed'), equals(activity('CopyFileToRaw').output.dataWritten, null)),\n  null,\n  int(activity('CopyFileToRaw').output.dataWritten)\n)\n",
 											"type": "Expression"
 										},
-										"type": "String"
+										"type": "Int64"
 									},
 									"ErrorMessage": {
 										"value": {
