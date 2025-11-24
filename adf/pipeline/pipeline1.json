@@ -211,7 +211,7 @@
 									"Content-Type": "application/json"
 								},
 								"url": {
-									"value": "https://adlsrmadwdev.table.core.windows.net/test",
+									"value": "https://scrgvkrmade.table.core.windows.net/test",
 									"type": "Expression"
 								},
 								"connectVia": {
@@ -224,7 +224,7 @@
 								},
 								"authentication": {
 									"type": "Basic",
-									"username": "alc1762422883_1762422887449@npalchemy.onmicrosoft.com",
+									"username": "u2786997@uel.ac.uk",
 									"password": {
 										"type": "AzureKeyVaultSecret",
 										"store": {
