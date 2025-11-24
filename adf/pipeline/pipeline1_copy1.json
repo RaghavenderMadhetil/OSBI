@@ -1,5 +1,5 @@
 {
-	"name": "pipeline1",
+	"name": "pipeline1_copy1",
 	"properties": {
 		"activities": [
 			{
@@ -209,7 +209,7 @@
 									"Content-Type": "application/json"
 								},
 								"url": {
-									"value": "@concat('https://adlsrmadwdev.table.core.windows.net/test?', 'sp=r&st=2025-11-24T14:19:30Z&se=2025-11-24T22:34:30Z&spr=https&sv=2024-11-04&sr=c&sig=x2mvcrSVGTPkCvyPmt1zkpAsok5NswgFG%2BVaH8z683A%3D')\n",
+									"value": "https://scrgvkrmade.table.core.windows.net/test",
 									"type": "Expression"
 								},
 								"connectVia": {
@@ -217,7 +217,7 @@
 									"type": "IntegrationRuntimeReference"
 								},
 								"body": {
-									"value": "@json(variables('auditRecord'))",
+									"value": "@json(concat(\n  '{',\n    '\"PartitionKey\":\"', pipeline().parameters.source_system, '\",',\n    '\"RowKey\":\"', replace(formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'),':','-'),'_', replace(item().name,'.csv',''), '\",',\n    '\"CSV_File_Name\":\"', item().name, '\",',\n    '\"Raw_GitHub_URL\":\"', item().download_url, '\",',\n    '\"Target_Path\":\"', concat('project/raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'), '/', item().name), '\",',\n    '\"Load_Status\":\"', if(greater(int(coalesce(string(activity('CopyFileToRaw').output.filesWritten),'0')), 0), 'SUCCESS', 'FAILED'), '\",',\n    '\"Load_Timestamp\":\"', formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'), '\"',\n  '}'\n))\n",
 									"type": "Expression"
 								}
 							}

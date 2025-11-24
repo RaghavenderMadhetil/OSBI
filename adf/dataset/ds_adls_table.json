@@ -1,0 +1,15 @@
+{
+	"name": "ds_adls_table",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_table",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": "audit"
+		}
+	}
+}
