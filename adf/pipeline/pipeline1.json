@@ -108,12 +108,53 @@
 										"type": "DelimitedTextReadSettings"
 									}
 								},
-								"enableStaging": false
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
 							},
 							"inputs": [
 								{
 									"referenceName": "ds_github_raw_file",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"owner": "@pipeline().parameters.owner",
+										"repo": "@pipeline().parameters.repo",
+										"branch": "@pipeline().parameters.branch",
+										"path": "@item().path",
+										"fileName": "''"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_adls_raw_csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": "@concat(pipeline().parameters.project, '_', item().name)",
+										"folderPath": {
+											"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))\n",
+											"type": "Expression"
+										},
+										"delimiter": "','",
+										"hasHeader": "false"
+									}
 								}
 							]
 						},
