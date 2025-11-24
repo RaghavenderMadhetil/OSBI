@@ -266,7 +266,7 @@
 								"storedProcedureParameters": {
 									"Action": {
 										"value": {
-											"value": "\"Start\"",
+											"value": "\"START\"",
 											"type": "Expression"
 										},
 										"type": "String"
@@ -280,7 +280,10 @@
 										"type": "String"
 									},
 									"ActivityName": {
-										"value": "'CopyFileToRaw'",
+										"value": {
+											"value": "\"CopyFileToRaw\"",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"SourceSystem": {
