@@ -208,7 +208,10 @@
 										"type": "String"
 									},
 									"RowCount": {
-										"value": "@activity('CopyFileToRaw').output.rowsCopied",
+										"value": {
+											"value": "null",
+											"type": "Expression"
+										},
 										"type": "Int64"
 									},
 									"FileSizeBytes": {
