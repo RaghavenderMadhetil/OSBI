@@ -210,7 +210,7 @@
 									},
 									"TargetPath": {
 										"value": {
-											"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))\n  ",
+											"value": "@concat('raw/', item().name)",
 											"type": "Expression"
 										},
 										"type": "String"
@@ -310,9 +310,9 @@
 										},
 										"type": "String"
 									},
-									"TargetPath": {
+									"SourceUrl": {
 										"value": {
-											"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))",
+											"value": "@concat('https://raw.githubusercontent.com/', pipeline().parameters.owner, '/', pipeline().parameters.repo, '/', pipeline().parameters.branch, '/', if(contains(item().path, item().name), item().path, concat(item().path,'/', item().name)))",
 											"type": "Expression"
 										},
 										"type": "String"
@@ -327,6 +327,10 @@
 									},
 									"Action": {
 										"value": "Start",
+										"type": "String"
+									},
+									"TargetPath": {
+										"value": "@concat('raw/', item().name)",
 										"type": "String"
 									}
 								}
