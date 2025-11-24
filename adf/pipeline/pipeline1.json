@@ -209,7 +209,7 @@
 									"Content-Type": "application/json"
 								},
 								"url": {
-									"value": "@concat('https://adlsrmadwdev.table.core.windows.net/test?', 'sp=racwdlmeop&st=2025-11-24T14:19:30Z&se=2025-11-24T22:34:30Z&spr=https&sv=2024-11-04&sr=c&sig=LoA4M2Xfh7QuokPXRg%2Bfj5vuYA9q4hLDm9lo%2Bg5tT80%3D')\n",
+									"value": "@concat('https://adlsrmadwdev.table.core.windows.net/audit?', 'sp=racwdlmeop&st=2025-11-24T14:19:30Z&se=2025-11-24T22:34:30Z&spr=https&sv=2024-11-04&sr=c&sig=LoA4M2Xfh7QuokPXRg%2Bfj5vuYA9q4hLDm9lo%2Bg5tT80%3D')\n",
 									"type": "Expression"
 								},
 								"connectVia": {
