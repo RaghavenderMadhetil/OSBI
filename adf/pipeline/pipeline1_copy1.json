@@ -84,7 +84,14 @@
 						{
 							"name": "CopyFileToRaw",
 							"type": "Copy",
-							"dependsOn": [],
+							"dependsOn": [
+								{
+									"activity": "usp_UpsertPipelineFileAudit",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
 							"policy": {
 								"timeout": "0.12:00:00",
 								"retry": 0,
@@ -160,35 +167,11 @@
 							]
 						},
 						{
-							"name": "SetAuditRecord",
-							"type": "SetVariable",
+							"name": "UpsertPipelineFileAudit",
+							"type": "SqlServerStoredProcedure",
 							"dependsOn": [
 								{
 									"activity": "CopyFileToRaw",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "auditRecord",
-								"value": {
-									"value": "@concat(\n  '{',\n    '\"CSV_File_Name\":\"', item().name, '\",',\n    '\"Raw_GitHub_URL\":\"', item().download_url, '\",',\n    '\"Target_Path\":\"', concat('project/raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'), '/', item().name), '\",',\n    '\"Load_Status\":\"', if(greater(int(coalesce(string(activity('CopyFileToRaw').output.filesWritten),'0')), 0), 'SUCCESS', 'FAILED'), '\",',\n    '\"Load_Timestamp\":\"', formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'), '\"',\n  '}'\n)\n",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "InsertTableRow",
-							"type": "WebActivity",
-							"dependsOn": [
-								{
-									"activity": "SetAuditRecord",
 									"dependencyConditions": [
 										"Succeeded"
 									]
@@ -203,23 +186,151 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"method": "POST",
-								"headers": {
-									"Accept": "application/json;odata=nometadata",
-									"Content-Type": "application/json"
-								},
-								"url": {
-									"value": "https://scrgvkrmade.table.core.windows.net/test",
-									"type": "Expression"
-								},
-								"connectVia": {
-									"referenceName": "AutoResolveIntegrationRuntime",
-									"type": "IntegrationRuntimeReference"
-								},
-								"body": {
-									"value": "@json(concat(\n  '{',\n    '\"PartitionKey\":\"', pipeline().parameters.source_system, '\",',\n    '\"RowKey\":\"', replace(formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'),':','-'),'_', replace(item().name,'.csv',''), '\",',\n    '\"CSV_File_Name\":\"', item().name, '\",',\n    '\"Raw_GitHub_URL\":\"', item().download_url, '\",',\n    '\"Target_Path\":\"', concat('project/raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'), '/', item().name), '\",',\n    '\"Load_Status\":\"', if(greater(int(coalesce(string(activity('CopyFileToRaw').output.filesWritten),'0')), 0), 'SUCCESS', 'FAILED'), '\",',\n    '\"Load_Timestamp\":\"', formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'), '\"',\n  '}'\n))\n",
-									"type": "Expression"
+								"storedProcedureName": "[dbo].[usp_UpsertPipelineFileAudit]",
+								"storedProcedureParameters": {
+									"Action": {
+										"value": "'End'",
+										"type": "String"
+									},
+									"RunId": {
+										"value": "@pipeline().RunId",
+										"type": "Guid"
+									},
+									"PipelineName": {
+										"value": "@pipeline().Pipeline",
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "'CopyFileToRaw'",
+										"type": "String"
+									},
+									"FileName": {
+										"value": "@item().name",
+										"type": "String"
+									},
+									"TargetPath": {
+										"value": {
+											"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))\n  ",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TargetFileName": {
+										"value": "@item().name",
+										"type": "String"
+									},
+									"Status": {
+										"value": "@activity('CopyFileToRaw').Status",
+										"type": "String"
+									},
+									"RowCount": {
+										"value": "@activity('CopyFileToRaw').output.rowsCopied",
+										"type": "Int64"
+									},
+									"FileSizeBytes": {
+										"value": "@activity('CopyFileToRaw').output.sizeInBytes",
+										"type": "String"
+									},
+									"ErrorMessage": {
+										"value": {
+											"value": "@if(equals(activity('CopyFileToRaw').Status,'Failed'), activity('CopyFileToRaw').Error.Message, '')",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ExtraJson": {
+										"value": "@string(activity('CopyFileToRaw').output)",
+										"type": "String"
+									}
 								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_sqldb_rm_dev",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "usp_UpsertPipelineFileAudit",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[usp_UpsertPipelineFileAudit]",
+								"storedProcedureParameters": {
+									"Action": {
+										"value": "'Start'",
+										"type": "String"
+									},
+									"RunId": {
+										"value": "@pipeline().RunId",
+										"type": "Guid"
+									},
+									"PipelineName": {
+										"value": "@pipeline().Pipeline",
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "'CopyFileToRaw'",
+										"type": "String"
+									},
+									"SourceSystem": {
+										"value": "@pipeline().parameters.source_system",
+										"type": "String"
+									},
+									"ProjectName": {
+										"value": "@pipeline().parameters.project",
+										"type": "String"
+									},
+									"RepoOwner": {
+										"value": "@pipeline().parameters.owner",
+										"type": "String"
+									},
+									"RepoName": {
+										"value": "@pipeline().parameters.repo",
+										"type": "String"
+									},
+									"RepoBranch": {
+										"value": "@pipeline().parameters.branch",
+										"type": "String"
+									},
+									"FileName": {
+										"value": "@item().name",
+										"type": "String"
+									},
+									"FilePath": {
+										"value": {
+											"value": "@concat('https://raw.githubusercontent.com/', pipeline().parameters.owner, '/', pipeline().parameters.repo, '/', pipeline().parameters.branch, '/', item().path)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TargetPath": {
+										"value": {
+											"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TargetFileName": {
+										"value": "@item().name",
+										"type": "String"
+									},
+									"ExtraJson": {
+										"value": "@string(item())",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_sqldb_rm_dev",
+								"type": "LinkedServiceReference"
 							}
 						}
 					]

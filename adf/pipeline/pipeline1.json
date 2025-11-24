@@ -219,6 +219,18 @@
 								"body": {
 									"value": "@json(variables('auditRecord'))",
 									"type": "Expression"
+								},
+								"authentication": {
+									"type": "Basic",
+									"username": "u2786997@uel.ac.uk",
+									"password": {
+										"type": "AzureKeyVaultSecret",
+										"store": {
+											"referenceName": "AzureKeyVault1",
+											"type": "LinkedServiceReference"
+										},
+										"secretName": "sp-rm-adw-secret"
+									}
 								}
 							}
 						}
