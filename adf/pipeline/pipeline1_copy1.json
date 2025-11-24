@@ -189,7 +189,7 @@
 								"storedProcedureName": "[dbo].[usp_UpsertPipelineFileAudit]",
 								"storedProcedureParameters": {
 									"Action": {
-										"value": "'End'",
+										"value": "End",
 										"type": "String"
 									},
 									"RunId": {
@@ -264,13 +264,6 @@
 							"typeProperties": {
 								"storedProcedureName": "[dbo].[usp_UpsertPipelineFileAudit]",
 								"storedProcedureParameters": {
-									"Action": {
-										"value": {
-											"value": "\"START\"",
-											"type": "Expression"
-										},
-										"type": "String"
-									},
 									"RunId": {
 										"value": "@pipeline().RunId",
 										"type": "Guid"
@@ -330,6 +323,10 @@
 									},
 									"ExtraJson": {
 										"value": "@string(item())",
+										"type": "String"
+									},
+									"Action": {
+										"value": "Start",
 										"type": "String"
 									}
 								}
