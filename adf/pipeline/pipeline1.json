@@ -145,7 +145,10 @@
 									"referenceName": "ds_adls_raw_csv",
 									"type": "DatasetReference",
 									"parameters": {
-										"fileName": "@concat(pipeline().parameters.project, '_', item().name)",
+										"fileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
 										"folderPath": {
 											"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))\n",
 											"type": "Expression"
@@ -185,8 +188,6 @@
 						{
 							"name": "InsertTableRow",
 							"type": "WebActivity",
-							"state": "Inactive",
-							"onInactiveMarkAs": "Succeeded",
 							"dependsOn": [
 								{
 									"activity": "SetAuditRecord",
