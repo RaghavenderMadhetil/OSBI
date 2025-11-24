@@ -1,0 +1,39 @@
+{
+	"name": "ds_github_list",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_GitHub_http",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"owner": {
+				"type": "string",
+				"defaultValue": "microsoft"
+			},
+			"repo": {
+				"type": "string",
+				"defaultValue": "sql-server-samples"
+			},
+			"path": {
+				"type": "string",
+				"defaultValue": "samples/databases/adventure-works/oltp-install-script"
+			},
+			"branch": {
+				"type": "string",
+				"defaultValue": "master"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": {
+					"value": "@concat('/repos/', dataset().owner, '/', dataset().repo, '/contents/', dataset().path)",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	}
+}
