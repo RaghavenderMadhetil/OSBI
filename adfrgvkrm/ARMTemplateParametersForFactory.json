@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adfrgvkrm"
+		},
+		"ls_adls_table_connectionString": {
+			"value": ""
+		},
+		"ls_git_raw_http_password": {
+			"value": ""
+		},
+		"ls_sqldb_rm_dev_password": {
+			"value": ""
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"value": "https://osbazurekeyvault.vault.azure.net/"
+		},
+		"LS_ADLS_RM_properties_typeProperties_url": {
+			"value": "https://scrgvkrmade.dfs.core.windows.net"
+		},
+		"LS_GitHub_http_properties_typeProperties_url": {
+			"value": "https://api.github.com"
+		},
+		"ls_git_raw_http_properties_typeProperties_url": {
+			"value": "https://raw.githubusercontent.com"
+		},
+		"ls_git_raw_http_properties_typeProperties_userName": {
+			"value": "sqladminuser"
+		},
+		"ls_sqldb_rm_dev_properties_typeProperties_server": {
+			"value": "sqlsrv-rm-dev.database.windows.net"
+		},
+		"ls_sqldb_rm_dev_properties_typeProperties_database": {
+			"value": "sqldb-rm-dev"
+		},
+		"ls_sqldb_rm_dev_properties_typeProperties_userName": {
+			"value": "sqladminuser"
+		},
+		"adls_prend_properties_privateLinkResourceId": {
+			"value": "/subscriptions/e4ba34f3-492a-42a1-b14b-9d90e73a3396/resourceGroups/rg-vk-rm-ade/providers/Microsoft.Storage/storageAccounts/scrgvkrmade"
+		},
+		"adls_prend_properties_groupId": {
+			"value": "dfs"
+		}
+	}
+}

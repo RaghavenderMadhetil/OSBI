@@ -1,0 +1,133 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adfrgvkrm"
+		},
+		"ls_adls_table_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_adls_table'"
+		},
+		"ls_git_raw_http_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_git_raw_http'"
+		},
+		"ls_sqldb_rm_dev_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_sqldb_rm_dev'"
+		},
+		"AzureKeyVault1_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://osbazurekeyvault.vault.azure.net/"
+		},
+		"LS_ADLS_RM_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://scrgvkrmade.dfs.core.windows.net"
+		},
+		"LS_GitHub_http_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.github.com"
+		},
+		"ls_git_raw_http_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://raw.githubusercontent.com"
+		},
+		"ls_git_raw_http_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "sqladminuser"
+		},
+		"ls_sqldb_rm_dev_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sqlsrv-rm-dev.database.windows.net"
+		},
+		"ls_sqldb_rm_dev_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sqldb-rm-dev"
+		},
+		"ls_sqldb_rm_dev_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "sqladminuser"
+		},
+		"adls_prend_properties_privateLinkResourceId": {
+			"type": "string",
+			"defaultValue": "/subscriptions/e4ba34f3-492a-42a1-b14b-9d90e73a3396/resourceGroups/rg-vk-rm-ade/providers/Microsoft.Storage/storageAccounts/scrgvkrmade"
+		},
+		"adls_prend_properties_groupId": {
+			"type": "string",
+			"defaultValue": "dfs"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "adfrgvkrm_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ls_adls_table_connectionString": {
+						"value": "[parameters('ls_adls_table_connectionString')]"
+					},
+					"ls_git_raw_http_password": {
+						"value": "[parameters('ls_git_raw_http_password')]"
+					},
+					"ls_sqldb_rm_dev_password": {
+						"value": "[parameters('ls_sqldb_rm_dev_password')]"
+					},
+					"AzureKeyVault1_properties_typeProperties_baseUrl": {
+						"value": "[parameters('AzureKeyVault1_properties_typeProperties_baseUrl')]"
+					},
+					"adls_prend_properties_privateLinkResourceId": {
+						"value": "[parameters('adls_prend_properties_privateLinkResourceId')]"
+					},
+					"adls_prend_properties_groupId": {
+						"value": "[parameters('adls_prend_properties_groupId')]"
+					},
+					"LS_ADLS_RM_properties_typeProperties_url": {
+						"value": "[parameters('LS_ADLS_RM_properties_typeProperties_url')]"
+					},
+					"LS_GitHub_http_properties_typeProperties_url": {
+						"value": "[parameters('LS_GitHub_http_properties_typeProperties_url')]"
+					},
+					"ls_git_raw_http_properties_typeProperties_url": {
+						"value": "[parameters('ls_git_raw_http_properties_typeProperties_url')]"
+					},
+					"ls_git_raw_http_properties_typeProperties_userName": {
+						"value": "[parameters('ls_git_raw_http_properties_typeProperties_userName')]"
+					},
+					"ls_sqldb_rm_dev_properties_typeProperties_server": {
+						"value": "[parameters('ls_sqldb_rm_dev_properties_typeProperties_server')]"
+					},
+					"ls_sqldb_rm_dev_properties_typeProperties_database": {
+						"value": "[parameters('ls_sqldb_rm_dev_properties_typeProperties_database')]"
+					},
+					"ls_sqldb_rm_dev_properties_typeProperties_userName": {
+						"value": "[parameters('ls_sqldb_rm_dev_properties_typeProperties_userName')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
