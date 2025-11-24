@@ -1,0 +1,7 @@
+{
+	"name": "adls_prend",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/e4ba34f3-492a-42a1-b14b-9d90e73a3396/resourceGroups/rg-vk-rm-ade/providers/Microsoft.Storage/storageAccounts/scrgvkrmade",
+		"groupId": "dfs"
+	}
+}
