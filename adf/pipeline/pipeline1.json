@@ -219,18 +219,6 @@
 								"body": {
 									"value": "@json(concat(\n  '{',\n    '\"PartitionKey\":\"', pipeline().parameters.source_system, '\",',\n    '\"RowKey\":\"', replace(formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'),':','-'),'_', replace(item().name,'.csv',''), '\",',\n    '\"CSV_File_Name\":\"', item().name, '\",',\n    '\"Raw_GitHub_URL\":\"', item().download_url, '\",',\n    '\"Target_Path\":\"', concat('project/raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'), '/', item().name), '\",',\n    '\"Load_Status\":\"', if(greater(int(coalesce(string(activity('CopyFileToRaw').output.filesWritten),'0')), 0), 'SUCCESS', 'FAILED'), '\",',\n    '\"Load_Timestamp\":\"', formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'), '\"',\n  '}'\n))\n",
 									"type": "Expression"
-								},
-								"authentication": {
-									"type": "Basic",
-									"username": "u2786997@uel.ac.uk",
-									"password": {
-										"type": "AzureKeyVaultSecret",
-										"store": {
-											"referenceName": "AzureKeyVault1",
-											"type": "LinkedServiceReference"
-										},
-										"secretName": "sp-rm-adw-secret"
-									}
 								}
 							}
 						}
