@@ -209,13 +209,16 @@
 									},
 									"RowCount": {
 										"value": {
-											"value": "null",
+											"value": "@activity('CopyFileToRaw').output.filesWritten",
 											"type": "Expression"
 										},
 										"type": "Int64"
 									},
 									"FileSizeBytes": {
-										"value": "@activity('CopyFileToRaw').output.sizeInBytes",
+										"value": {
+											"value": "\n\n@activity('CopyFileToRaw').output.dataWritten",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"ErrorMessage": {
@@ -227,6 +230,14 @@
 									},
 									"ExtraJson": {
 										"value": "@string(activity('CopyFileToRaw').output)",
+										"type": "String"
+									},
+									"RunId": {
+										"value": "@pipeline().RunId",
+										"type": "Guid"
+									},
+									"PipelineName": {
+										"value": "@pipeline().Pipeline",
 										"type": "String"
 									}
 								}
