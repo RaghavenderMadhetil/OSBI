@@ -3,8 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "GetRepoFileList",
-				"type": "Lookup",
+				"name": "sql_table_metadata",
+				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -16,252 +16,45 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "JsonSource",
+						"type": "DelimitedTextSource",
 						"storeSettings": {
-							"type": "HttpReadSettings",
-							"requestMethod": "GET"
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
 						},
 						"formatSettings": {
-							"type": "JsonReadSettings"
+							"type": "DelimitedTextReadSettings"
 						}
 					},
-					"dataset": {
-						"referenceName": "ds_github_list",
-						"type": "DatasetReference",
-						"parameters": {
-							"owner": "microsoft",
-							"repo": "sql-server-samples",
-							"path": "samples/databases/adventure-works/oltp-install-script",
-							"branch": "master"
-						}
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
 					},
-					"firstRowOnly": false
-				}
-			},
-			{
-				"name": "OnlyCSVs",
-				"type": "Filter",
-				"dependsOn": [
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
 					{
-						"activity": "GetRepoFileList",
-						"dependencyConditions": [
-							"Succeeded"
-						]
+						"referenceName": "ds_sql_metadata",
+						"type": "DatasetReference"
 					}
 				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('GetRepoFileList').output.value",
-						"type": "Expression"
-					},
-					"condition": {
-						"value": "@and(endsWith(item().name, '.csv'),\n    contains(\n        'SalesOrderHeader.csv,SalesOrderDetail.csv,Customer.csv,Product.csv,SalesPerson.csv,SalesTerritory.csv,Address.csv,StateProvince.csv,CountryRegion.csv',\n        item().name\n    )\n)\n",
-						"type": "Expression"
-					}
-				}
-			},
-			{
-				"name": "ProcessEachCSV",
-				"type": "ForEach",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
-				"dependsOn": [
+				"outputs": [
 					{
-						"activity": "OnlyCSVs",
-						"dependencyConditions": [
-							"Succeeded"
-						]
+						"referenceName": "ds_sqldb_rm",
+						"type": "DatasetReference"
 					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('OnlyCSVs').output.Value",
-						"type": "Expression"
-					},
-					"isSequential": false,
-					"batchCount": 1,
-					"activities": [
-						{
-							"name": "CopyFileToRaw",
-							"type": "Copy",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "DelimitedTextSource",
-									"storeSettings": {
-										"type": "HttpReadSettings",
-										"maxConcurrentConnections": 5,
-										"requestMethod": "GET",
-										"requestTimeout": ""
-									},
-									"formatSettings": {
-										"type": "DelimitedTextReadSettings"
-									}
-								},
-								"sink": {
-									"type": "DelimitedTextSink",
-									"storeSettings": {
-										"type": "AzureBlobFSWriteSettings"
-									},
-									"formatSettings": {
-										"type": "DelimitedTextWriteSettings",
-										"quoteAllText": true,
-										"fileExtension": ".txt"
-									}
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "ds_github_raw_file",
-									"type": "DatasetReference",
-									"parameters": {
-										"owner": "@pipeline().parameters.owner",
-										"repo": "@pipeline().parameters.repo",
-										"branch": "@pipeline().parameters.branch",
-										"path": "@item().path",
-										"fileName": "''"
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "ds_adls_raw_csv",
-									"type": "DatasetReference",
-									"parameters": {
-										"fileName": {
-											"value": "@item().name",
-											"type": "Expression"
-										},
-										"folderPath": {
-											"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))\n",
-											"type": "Expression"
-										},
-										"delimiter": "','",
-										"hasHeader": "false"
-									}
-								}
-							]
-						},
-						{
-							"name": "SetAuditRecord",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "CopyFileToRaw",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "auditRecord",
-								"value": {
-									"value": "@concat(\n  '{',\n    '\"CSV_File_Name\":\"', item().name, '\",',\n    '\"Raw_GitHub_URL\":\"', item().download_url, '\",',\n    '\"Target_Path\":\"', concat('project/raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'), '/', item().name), '\",',\n    '\"Load_Status\":\"', if(greater(int(coalesce(string(activity('CopyFileToRaw').output.filesWritten),'0')), 0), 'SUCCESS', 'FAILED'), '\",',\n    '\"Load_Timestamp\":\"', formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'), '\"',\n  '}'\n)\n",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "InsertTableRow",
-							"type": "WebActivity",
-							"dependsOn": [
-								{
-									"activity": "SetAuditRecord",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"method": "POST",
-								"headers": {
-									"Accept": "application/json;odata=nometadata",
-									"Content-Type": "application/json"
-								},
-								"url": {
-									"value": "@concat('https://adlsrmadwdev.table.core.windows.net/audit?', 'sp=racwdlmeop&st=2025-11-24T14:19:30Z&se=2025-11-24T22:34:30Z&spr=https&sv=2024-11-04&sr=c&sig=LoA4M2Xfh7QuokPXRg%2Bfj5vuYA9q4hLDm9lo%2Bg5tT80%3D')\n",
-									"type": "Expression"
-								},
-								"connectVia": {
-									"referenceName": "AutoResolveIntegrationRuntime",
-									"type": "IntegrationRuntimeReference"
-								},
-								"body": {
-									"value": "@json(variables('auditRecord'))",
-									"type": "Expression"
-								},
-								"authentication": {
-									"type": "Basic",
-									"username": "u2786997@uel.ac.uk",
-									"password": {
-										"type": "AzureKeyVaultSecret",
-										"store": {
-											"referenceName": "AzureKeyVault1",
-											"type": "LinkedServiceReference"
-										},
-										"secretName": "sp-rm-adw-secret"
-									}
-								}
-							}
-						}
-					]
-				}
+				]
 			}
 		],
-		"parameters": {
-			"source_system": {
-				"type": "string",
-				"defaultValue": "RM_ADW"
-			},
-			"project": {
-				"type": "string",
-				"defaultValue": "RM_ADW"
-			},
-			"owner": {
-				"type": "string",
-				"defaultValue": "microsoft"
-			},
-			"repo": {
-				"type": "string",
-				"defaultValue": "sql-server-samples"
-			},
-			"branch": {
-				"type": "string",
-				"defaultValue": "master"
-			}
-		},
 		"variables": {
 			"auditRecord": {
 				"type": "String"

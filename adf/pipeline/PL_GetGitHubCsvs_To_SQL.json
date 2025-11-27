@@ -1,5 +1,5 @@
 {
-	"name": "pipeline1_copy1",
+	"name": "PL_GetGitHubCsvs_To_SQL",
 	"properties": {
 		"activities": [
 			{
@@ -200,11 +200,17 @@
 										"type": "String"
 									},
 									"TargetFileName": {
-										"value": "@item().name",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"Status": {
-										"value": "@activity('CopyFileToRaw').Status",
+										"value": {
+											"value": "@activity('CopyFileToRaw').Status",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"RowCount": {
@@ -229,16 +235,36 @@
 										"type": "String"
 									},
 									"ExtraJson": {
-										"value": "@string(activity('CopyFileToRaw').output)",
+										"value": {
+											"value": "@string(activity('CopyFileToRaw').output)",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"RunId": {
-										"value": "@pipeline().RunId",
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
 										"type": "Guid"
 									},
 									"PipelineName": {
-										"value": "@pipeline().Pipeline",
+										"value": {
+											"value": "@pipeline().Pipeline",
+											"type": "Expression"
+										},
 										"type": "String"
+									},
+									"ActivityName": {
+										"value": {
+											"value": "\"CopyFileToRaw\"",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FailOnError": {
+										"value": "true",
+										"type": "Boolean"
 									}
 								}
 							},
@@ -263,11 +289,17 @@
 								"storedProcedureName": "[dbo].[usp_UpsertPipelineFileAudit]",
 								"storedProcedureParameters": {
 									"RunId": {
-										"value": "@pipeline().RunId",
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
 										"type": "Guid"
 									},
 									"PipelineName": {
-										"value": "@pipeline().Pipeline",
+										"value": {
+											"value": "@pipeline().Pipeline",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"ActivityName": {
@@ -278,27 +310,45 @@
 										"type": "String"
 									},
 									"SourceSystem": {
-										"value": "@pipeline().parameters.source_system",
+										"value": {
+											"value": "@pipeline().parameters.source_system",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"ProjectName": {
-										"value": "@pipeline().parameters.project",
+										"value": {
+											"value": "@pipeline().parameters.project",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"RepoOwner": {
-										"value": "@pipeline().parameters.owner",
+										"value": {
+											"value": "@pipeline().parameters.owner",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"RepoName": {
-										"value": "@pipeline().parameters.repo",
+										"value": {
+											"value": "@pipeline().parameters.repo",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"RepoBranch": {
-										"value": "@pipeline().parameters.branch",
+										"value": {
+											"value": "@pipeline().parameters.branch",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"FileName": {
-										"value": "@item().name",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"FilePath": {
@@ -316,11 +366,17 @@
 										"type": "String"
 									},
 									"TargetFileName": {
-										"value": "@item().name",
+										"value": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"ExtraJson": {
-										"value": "@string(item())",
+										"value": {
+											"value": "@string(item())",
+											"type": "Expression"
+										},
 										"type": "String"
 									},
 									"Action": {
@@ -328,7 +384,10 @@
 										"type": "String"
 									},
 									"TargetPath": {
-										"value": "@concat('raw/', item().name)",
+										"value": {
+											"value": "@concat('raw/', item().name)",
+											"type": "Expression"
+										},
 										"type": "String"
 									}
 								}

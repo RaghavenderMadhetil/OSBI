@@ -1,0 +1,16 @@
+{
+	"name": "ds_sqldb_rm",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqldb_rm_dev",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "sql_table_metadata"
+		}
+	}
+}

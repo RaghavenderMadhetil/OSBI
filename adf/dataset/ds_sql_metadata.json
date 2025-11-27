@@ -1,0 +1,53 @@
+{
+	"name": "ds_sql_metadata",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_RM",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "sql_table_metadata.csv",
+				"folderPath": "audit",
+				"fileSystem": "project"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "table_name",
+				"type": "String"
+			},
+			{
+				"name": "column_names_json",
+				"type": "String"
+			},
+			{
+				"name": "column_defs_json",
+				"type": "String"
+			},
+			{
+				"name": "primary_keys_json",
+				"type": "String"
+			},
+			{
+				"name": "foreign_keys_json",
+				"type": "String"
+			},
+			{
+				"name": "unique_keys_json",
+				"type": "String"
+			},
+			{
+				"name": "raw_sql",
+				"type": "String"
+			}
+		]
+	}
+}
