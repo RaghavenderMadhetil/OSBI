@@ -14,7 +14,7 @@
 				"folderPath": "audit",
 				"fileSystem": "project"
 			},
-			"columnDelimiter": ",",
+			"columnDelimiter": "|",
 			"escapeChar": "\\",
 			"firstRowAsHeader": true,
 			"quoteChar": "\""
