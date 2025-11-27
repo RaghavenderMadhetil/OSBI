@@ -29,11 +29,99 @@
 					"sink": {
 						"type": "AzureSqlSink",
 						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
 					},
 					"enableStaging": false,
 					"translator": {
 						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "table_name",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "table_name",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "column_names_json",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "column_names_json",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "column_defs_json",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "column_defs_json",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "primary_keys_json",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "primary_keys_json",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "foreign_keys_json",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "foreign_keys_json",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "unique_keys_json",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "unique_keys_json",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "raw_sql",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "raw_sql",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							}
+						],
 						"typeConversion": true,
 						"typeConversionSettings": {
 							"allowDataTruncation": true,
