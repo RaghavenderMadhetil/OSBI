@@ -434,10 +434,7 @@
 					"sink": {
 						"type": "AzureSqlSink",
 						"preCopyScript": "Truncate table [dbo].[sql_table_metadata]",
-						"writeBehavior": "upsert",
-						"upsertSettings": {
-							"useTempDB": true
-						},
+						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
 						"disableMetricsCollection": false
 					},
