@@ -10,12 +10,12 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "sql_table_metadata.csv",
+				"fileName": "output-onlinetools.txt",
 				"folderPath": "audit",
 				"fileSystem": "project"
 			},
-			"columnDelimiter": ",",
-			"escapeChar": "",
+			"columnDelimiter": ";",
+			"escapeChar": "/",
 			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
