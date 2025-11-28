@@ -396,14 +396,93 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_sql_metadata')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_RM",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "output-onlinetools.txt",
+						"folderPath": "audit",
+						"fileSystem": "project"
+					},
+					"columnDelimiter": ";",
+					"escapeChar": "/",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "table_name",
+						"type": "String"
+					},
+					{
+						"name": "column_names_json",
+						"type": "String"
+					},
+					{
+						"name": "column_defs_json",
+						"type": "String"
+					},
+					{
+						"name": "primary_keys_json",
+						"type": "String"
+					},
+					{
+						"name": "foreign_keys_json",
+						"type": "String"
+					},
+					{
+						"name": "unique_keys_json",
+						"type": "String"
+					},
+					{
+						"name": "raw_sql",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_RM')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_sqldb_rm')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sqldb_rm_dev",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "sql_table_metadata"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sqldb_rm_dev')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "GetRepoFileList",
-						"type": "Lookup",
+						"name": "sqltable_metadata",
+						"type": "Copy",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -415,254 +494,137 @@
 						"userProperties": [],
 						"typeProperties": {
 							"source": {
-								"type": "JsonSource",
+								"type": "DelimitedTextSource",
 								"storeSettings": {
-									"type": "HttpReadSettings",
-									"requestMethod": "GET"
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
-									"type": "JsonReadSettings"
+									"type": "DelimitedTextReadSettings"
 								}
 							},
-							"dataset": {
-								"referenceName": "ds_github_list",
-								"type": "DatasetReference",
-								"parameters": {
-									"owner": "microsoft",
-									"repo": "sql-server-samples",
-									"path": "samples/databases/adventure-works/oltp-install-script",
-									"branch": "master"
-								}
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
 							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "OnlyCSVs",
-						"type": "Filter",
-						"dependsOn": [
-							{
-								"activity": "GetRepoFileList",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('GetRepoFileList').output.value",
-								"type": "Expression"
-							},
-							"condition": {
-								"value": "@and(endsWith(item().name, '.csv'),\n    contains(\n        'SalesOrderHeader.csv,SalesOrderDetail.csv,Customer.csv,Product.csv,SalesPerson.csv,SalesTerritory.csv,Address.csv,StateProvince.csv,CountryRegion.csv',\n        item().name\n    )\n)\n",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "ProcessEachCSV",
-						"type": "ForEach",
-						"state": "Inactive",
-						"onInactiveMarkAs": "Succeeded",
-						"dependsOn": [
-							{
-								"activity": "OnlyCSVs",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('OnlyCSVs').output.Value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"batchCount": 1,
-							"activities": [
-								{
-									"name": "CopyFileToRaw",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
 										"source": {
-											"type": "DelimitedTextSource",
-											"storeSettings": {
-												"type": "HttpReadSettings",
-												"maxConcurrentConnections": 5,
-												"requestMethod": "GET",
-												"requestTimeout": ""
-											},
-											"formatSettings": {
-												"type": "DelimitedTextReadSettings"
-											}
+											"name": "table_name",
+											"type": "String",
+											"physicalType": "String"
 										},
 										"sink": {
-											"type": "DelimitedTextSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "DelimitedTextWriteSettings",
-												"quoteAllText": true,
-												"fileExtension": ".txt"
-											}
+											"name": "table_name",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "column_names_json",
+											"type": "String",
+											"physicalType": "String"
 										},
-										"enableStaging": false,
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
+										"sink": {
+											"name": "column_names_json",
+											"type": "String",
+											"physicalType": "nvarchar"
 										}
 									},
-									"inputs": [
-										{
-											"referenceName": "ds_github_raw_file",
-											"type": "DatasetReference",
-											"parameters": {
-												"owner": "@pipeline().parameters.owner",
-												"repo": "@pipeline().parameters.repo",
-												"branch": "@pipeline().parameters.branch",
-												"path": "@item().path",
-												"fileName": "''"
-											}
+									{
+										"source": {
+											"name": "column_defs_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "column_defs_json",
+											"type": "String",
+											"physicalType": "nvarchar"
 										}
-									],
-									"outputs": [
-										{
-											"referenceName": "ds_adls_raw_csv",
-											"type": "DatasetReference",
-											"parameters": {
-												"fileName": {
-													"value": "@item().name",
-													"type": "Expression"
-												},
-												"folderPath": {
-													"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))\n",
-													"type": "Expression"
-												},
-												"delimiter": "','",
-												"hasHeader": "false"
-											}
-										}
-									]
-								},
-								{
-									"name": "SetAuditRecord",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "CopyFileToRaw",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureOutput": false,
-										"secureInput": false
 									},
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "auditRecord",
-										"value": {
-											"value": "@concat(\n  '{',\n    '\"CSV_File_Name\":\"', item().name, '\",',\n    '\"Raw_GitHub_URL\":\"', item().download_url, '\",',\n    '\"Target_Path\":\"', concat('project/raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'), '/', item().name), '\",',\n    '\"Load_Status\":\"', if(greater(int(coalesce(string(activity('CopyFileToRaw').output.filesWritten),'0')), 0), 'SUCCESS', 'FAILED'), '\",',\n    '\"Load_Timestamp\":\"', formatDateTime(utcNow(),'yyyy-MM-ddTHH:mm:ssZ'), '\"',\n  '}'\n)\n",
-											"type": "Expression"
+									{
+										"source": {
+											"name": "primary_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "primary_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "foreign_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "foreign_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "unique_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "unique_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "raw_sql",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "raw_sql",
+											"type": "String",
+											"physicalType": "nvarchar"
 										}
 									}
-								},
-								{
-									"name": "InsertTableRow",
-									"type": "WebActivity",
-									"dependsOn": [
-										{
-											"activity": "SetAuditRecord",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"method": "POST",
-										"headers": {
-											"Accept": "application/json;odata=nometadata",
-											"Content-Type": "application/json"
-										},
-										"url": {
-											"value": "@concat('https://adlsrmadwdev.table.core.windows.net/audit?', 'sp=racwdlmeop&st=2025-11-24T14:19:30Z&se=2025-11-24T22:34:30Z&spr=https&sv=2024-11-04&sr=c&sig=LoA4M2Xfh7QuokPXRg%2Bfj5vuYA9q4hLDm9lo%2Bg5tT80%3D')\n",
-											"type": "Expression"
-										},
-										"connectVia": {
-											"referenceName": "AutoResolveIntegrationRuntime",
-											"type": "IntegrationRuntimeReference"
-										},
-										"body": {
-											"value": "@json(variables('auditRecord'))",
-											"type": "Expression"
-										},
-										"authentication": {
-											"type": "Basic",
-											"username": "u2786997@uel.ac.uk",
-											"password": {
-												"type": "AzureKeyVaultSecret",
-												"store": {
-													"referenceName": "AzureKeyVault1",
-													"type": "LinkedServiceReference"
-												},
-												"secretName": "sp-rm-adw-secret"
-											}
-										}
-									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
 								}
-							]
-						}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_sql_metadata",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sqldb_rm",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"source_system": {
-						"type": "string",
-						"defaultValue": "RM_ADW"
-					},
-					"project": {
-						"type": "string",
-						"defaultValue": "RM_ADW"
-					},
-					"owner": {
-						"type": "string",
-						"defaultValue": "microsoft"
-					},
-					"repo": {
-						"type": "string",
-						"defaultValue": "sql-server-samples"
-					},
-					"branch": {
-						"type": "string",
-						"defaultValue": "master"
-					}
 				},
 				"variables": {
 					"auditRecord": {
@@ -672,15 +634,12 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_github_list')]",
-				"[concat(variables('factoryId'), '/datasets/ds_github_raw_file')]",
-				"[concat(variables('factoryId'), '/datasets/ds_adls_raw_csv')]",
-				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
-				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVault1')]"
+				"[concat(variables('factoryId'), '/datasets/ds_sql_metadata')]",
+				"[concat(variables('factoryId'), '/datasets/ds_sqldb_rm')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1_copy1')]",
+			"name": "[concat(parameters('factoryName'), '/PL_GetGitHubCsvs_To_SQL')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -723,6 +682,7 @@
 					},
 					{
 						"name": "OnlyCSVs",
+						"description": "'Account.csv,Department.csv,BusinessEntity.csv,BusinessEntityAddress.csv,PurchaseOrderHeader.csv,PurchaseOrderDetail.csv,TransactionHistory.csv , TransactionHistoryArchive.csv,ProductCostHistory.csv, ProductListPriceHistory.csv, ProductVendor.csv, Product.csv,Currency.csv , CurrencyRate.csv,Employee.csv, EmployeeDepartmentHistory.csv,Customer.csv, SalesOrderHeader.csv ,SalesOrderDetail.csv'",
 						"type": "Filter",
 						"dependsOn": [
 							{
@@ -739,7 +699,7 @@
 								"type": "Expression"
 							},
 							"condition": {
-								"value": "@and(endsWith(item().name, '.csv'),\n    contains(\n        'Address.csv',\n        item().name\n    )\n)\n",
+								"value": "@and(endsWith(item().name, '.csv'),\n    contains(\n        'Account.csv,Department.csv,BusinessEntity.csv,PurchaseOrderHeader.csv,PurchaseOrderDetail.csv,TransactionHistory.csv,TransactionHistoryArchive.csv,Product.csv,ProductCostHistory.csv,Currency.csv,CurrencyRate.csv',\n        item().name\n    )\n)\n",
 								"type": "Expression"
 							}
 						}
@@ -937,6 +897,17 @@
 													"type": "Expression"
 												},
 												"type": "String"
+											},
+											"ActivityName": {
+												"value": {
+													"value": "\"CopyFileToRaw\"",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"FailOnError": {
+												"value": "true",
+												"type": "Boolean"
 											}
 										}
 									},
@@ -1071,6 +1042,188 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "sqltable_metadata",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ProcessEachCSV",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"preCopyScript": "Truncate table [dbo].[sql_table_metadata]",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "table_name",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "table_name",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "column_names_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "column_names_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "column_defs_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "column_defs_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "primary_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "primary_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "foreign_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "foreign_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "unique_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "unique_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "raw_sql",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "raw_sql",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_sql_metadata",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sqldb_rm",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "PipelineManifest",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "sqltable_metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "ls_sqldb_rm_dev",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "\nIF OBJECT_ID('dbo.PipelineManifest','U') IS NOT NULL\n    DROP TABLE dbo.PipelineManifest;\n\n\nCREATE TABLE dbo.PipelineManifest\n(\n    ManifestID INT IDENTITY(1,1) PRIMARY KEY,\n    ModuleName        NVARCHAR(128)   NOT NULL,\n    SourceFile        NVARCHAR(256)   NOT NULL,\n    SourceDataFlow    NVARCHAR(512)   NULL,\n    [Layer]           NVARCHAR(64)    NOT NULL,\n    [Batch]           NVARCHAR(64)    NULL,\n    ParallelGroup     NVARCHAR(128)   NULL,\n    [Target]          NVARCHAR(512)   NULL,\n    ProcessingPlatform NVARCHAR(128)  NULL,\n    DependencyType    NVARCHAR(64)    NULL,\n    DependencyStatus  NVARCHAR(64)    NULL,\n    Dependencies      NVARCHAR(MAX)   NULL,\n    CreatedAt         DATETIME2       NOT NULL DEFAULT SYSUTCDATETIME()\n);\n\n\nBEGIN TRANSACTION;\n\nINSERT INTO dbo.PipelineManifest (ModuleName, SourceFile, SourceDataFlow, [Layer], [Batch], ParallelGroup, [Target], ProcessingPlatform, DependencyType, DependencyStatus, Dependencies)\nVALUES\n-- DimDate (generated)\n(N'Finance', N'DimDate (generated)', N'DimDate (generated)', N'Bronze', N'Batch B', N'Finance_Bronze', N'dimdate.parquet', N'Databricks', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'DimDate (generated)', N'dimdate.parquet', N'Silver', N'Batch B', N'Finance_Dims', N'stg.dim.date', N'Databricks', N'Parallel', N'Pending', N'dimdate.parquet (Bronze)'),\n(N'Finance', N'DimDate (generated)', N'stg.dim.date', N'Gold', N'Batch B', N'Finance_Gold', N'dbo.DimDate', N'Databricks / Synapse', N'Sequence', N'Blocked', N'stg.dim.date (Silver)'),\n\n-- Account -> DimAccount\n(N'Finance', N'Account.csv', N'Account.csv', N'Raw', N'Batch B', N'Finance_Raw', N'Account.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'Account.csv', N'Account.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.finance.account', N'Databricks', N'Parallel', N'Pending', N'Account.csv (Raw)'),\n(N'Finance', N'Account.csv', N'stg.finance.account', N'Silver', N'Batch B', N'Finance_Dims', N'dbo.DimAccount', N'Databricks / Synapse', N'Sequence', N'Blocked', N'stg.finance.account (Bronze)'),\n\n-- Department -> DimDepartmentGroup\n(N'Finance', N'Department.csv', N'Department.csv', N'Raw', N'Batch B', N'Finance_Raw', N'Department.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'Department.csv', N'Department.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.hr.department', N'Databricks', N'Parallel', N'Pending', N'Department.csv (Raw)'),\n(N'Finance', N'Department.csv', N'stg.hr.department', N'Silver', N'Batch B', N'Finance_Dims', N'dbo.DimDepartmentGroup', N'Databricks / Synapse', N'Sequence', N'Blocked', N'stg.hr.department (Bronze)'),\n\n-- Organization (BusinessEntity / Vendor) -> DimOrganization\n(N'Finance', N'BusinessEntity.csv', N'BusinessEntity.csv', N'Raw', N'Batch B', N'Finance_Raw', N'Businessentity.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'BusinessEntity.csv', N'Businessentity.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.org.businessentity', N'Databricks', N'Parallel', N'Pending', N'BusinessEntity.csv (Raw)'),\n(N'Finance', N'BusinessEntity.csv', N'stg.org.businessentity', N'Silver', N'Batch B', N'Finance_Dims', N'dbo.DimOrganization', N'Databricks / Synapse', N'Sequence', N'Blocked', N'stg.org.businessentity (Bronze); dbo.DimCurrency (Silver) if Currency enrichment required'),\n\n-- Scenario (MISSING OLTP source) -> DimScenario (we will create default)\n(N'Finance', N'Scenario (default)', N'Scenario (generated)', N'Raw', N'Batch B', N'Finance_Raw', N'Scenario.parquet', N'Databricks', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'Scenario (default)', N'Scenario.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.finance.scenario', N'Databricks', N'Parallel', N'Pending', N'Scenario.parquet (Raw)'),\n(N'Finance', N'Scenario (default)', N'stg.finance.scenario', N'Silver', N'Batch B', N'Finance_Dims', N'dbo.DimScenario', N'Databricks / Synapse', N'Sequence', N'Blocked', N'stg.finance.scenario (Bronze)'),\n\n-- Purchase Orders as Finance source (fallback if FinanceTransactions.csv not available)\n(N'Finance', N'PurchaseOrderHeader.csv', N'PurchaseOrderHeader.csv', N'Raw', N'Batch B', N'Finance_Raw', N'PurchaseOrderHeader.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'PurchaseOrderHeader.csv', N'PurchaseOrderHeader.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.poh', N'Databricks', N'Parallel', N'Pending', N'PurchaseOrderHeader.csv (Raw)'),\n(N'Finance', N'PurchaseOrderDetail.csv', N'PurchaseOrderDetail.csv', N'Raw', N'Batch B', N'Finance_Raw', N'PurchaseOrderDetail.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'PurchaseOrderDetail.csv', N'PurchaseOrderDetail.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.pod', N'Databricks', N'Parallel', N'Pending', N'PurchaseOrderDetail.csv (Raw)'),\n(N'Finance', N'PurchaseOrder (staging)', N'stg.poh; stg.pod', N'Silver (staging)', N'Batch B', N'Finance_Staging', N'silver.fact_po_staging', N'Databricks', N'Sequence', N'Blocked', N'stg.poh (Bronze); stg.pod (Bronze)'),\n(N'Finance', N'PurchaseOrder (staging)', N'silver.fact_po_staging; dbo.DimAccount; dbo.DimOrganization; dbo.DimDepartmentGroup; dbo.DimScenario; dbo.DimDate', N'Gold', N'Batch B', N'Finance_Gold', N'dbo.FactFinance', N'Synapse / Databricks', N'Sequence', N'Blocked', N'silver.fact_po_staging (Silver); dbo.DimAccount (Silver); dbo.DimOrganization (Silver); dbo.DimDepartmentGroup (Silver); dbo.DimScenario (Silver); dbo.DimDate (Silver)'),\n\n-- TransactionHistory (inventory/cost events) -> optional enrichment to FactFinance\n(N'Finance', N'TransactionHistory.csv', N'TransactionHistory.csv', N'Raw', N'Batch B', N'Finance_Raw', N'TransactionHistory.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'TransactionHistory.csv', N'TransactionHistory.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.transactionhistory', N'Databricks', N'Parallel', N'Pending', N'TransactionHistory.csv (Raw)'),\n(N'Finance', N'TransactionHistory.csv', N'stg.transactionhistory', N'Silver', N'Batch B', N'Finance_Staging', N'silver.inventory_transactions', N'Databricks', N'Sequence', N'Blocked', N'stg.transactionhistory (Bronze)'),\n(N'Finance', N'TransactionHistory.csv', N'silver.inventory_transactions; dbo.DimProduct; dbo.DimDate; dbo.DimAccount; dbo.DimOrganization; dbo.DimScenario', N'Gold', N'Batch B', N'Finance_Gold', N'dbo.FactFinance', N'Databricks / Synapse', N'Sequence', N'Blocked', N'silver.inventory_transactions (Silver); dbo.DimProduct (Silver if used); dbo.DimDate (Silver)'),\n\n-- Product/Cost inputs (for account mapping / cost)\n(N'Finance', N'Product.csv', N'Product.csv', N'Raw', N'Batch B', N'Finance_Raw', N'Product.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'Product.csv', N'Product.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.product', N'Databricks', N'Parallel', N'Pending', N'Product.csv (Raw)'),\n(N'Finance', N'ProductCostHistory.csv', N'ProductCostHistory.csv', N'Raw', N'Batch B', N'Finance_Raw', N'ProductCostHistory.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'ProductCostHistory.csv', N'ProductCostHistory.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.product.costhistory', N'Databricks', N'Parallel', N'Pending', N'ProductCostHistory.csv (Raw)'),\n\n-- Currency (for FX conversion)\n(N'Finance', N'Currency.csv', N'Currency.csv', N'Raw', N'Batch B', N'Finance_Raw', N'Currency.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'Currency.csv', N'Currency.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.currency', N'Databricks', N'Parallel', N'Pending', N'Currency.csv (Raw)'),\n(N'Finance', N'CurrencyRate.csv', N'CurrencyRate.csv', N'Raw', N'Batch B', N'Finance_Raw', N'CurrencyRate.parquet', N'ADF', N'Parallel', N'Ready', N'none'),\n(N'Finance', N'CurrencyRate.csv', N'CurrencyRate.parquet', N'Bronze', N'Batch B', N'Finance_Bronze', N'stg.currency.rate', N'Databricks', N'Parallel', N'Pending', N'CurrencyRate.csv (Raw)'),\n(N'Finance', N'CurrencyRate.csv', N'stg.currency.rate', N'Silver', N'Batch B', N'Finance_Dims', N'silver.currency_rate_timeseries', N'Databricks', N'Sequence', N'Blocked', N'stg.currency.rate (Bronze); dbo.DimDate (Silver)'),\n(N'Finance', N'CurrencyRate.csv', N'silver.currency_rate_timeseries; dbo.DimDate', N'Gold', N'Batch B', N'Finance_Gold', N'dbo.DimCurrencyRate (or used in conversion)', N'Databricks / Synapse', N'Sequence', N'Blocked', N'silver.currency_rate_timeseries (Silver); dbo.DimDate (Silver)'),\n\nCOMMIT TRANSACTION;\n"
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
 					}
 				],
 				"policy": {
@@ -1107,9 +1260,11 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_github_list')]",
+				"[concat(variables('factoryId'), '/datasets/ds_sql_metadata')]",
+				"[concat(variables('factoryId'), '/datasets/ds_sqldb_rm')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_sqldb_rm_dev')]",
 				"[concat(variables('factoryId'), '/datasets/ds_github_raw_file')]",
-				"[concat(variables('factoryId'), '/datasets/ds_adls_raw_csv')]",
-				"[concat(variables('factoryId'), '/linkedServices/ls_sqldb_rm_dev')]"
+				"[concat(variables('factoryId'), '/datasets/ds_adls_raw_csv')]"
 			]
 		}
 	]
