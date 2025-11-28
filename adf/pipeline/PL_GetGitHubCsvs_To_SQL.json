@@ -551,6 +551,8 @@
 			{
 				"name": "PipelineManifest",
 				"type": "Script",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "sqltable_metadata",
