@@ -65,170 +65,6 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "sqltable_metadata",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"sink": {
-								"type": "AzureSqlSink",
-								"writeBehavior": "insert",
-								"sqlWriterUseTableLock": false,
-								"tableOption": "autoCreate",
-								"disableMetricsCollection": false
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"mappings": [
-									{
-										"source": {
-											"name": "table_name",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "table_name",
-											"type": "String",
-											"physicalType": "nvarchar"
-										}
-									},
-									{
-										"source": {
-											"name": "column_names_json",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "column_names_json",
-											"type": "String",
-											"physicalType": "nvarchar"
-										}
-									},
-									{
-										"source": {
-											"name": "column_defs_json",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "column_defs_json",
-											"type": "String",
-											"physicalType": "nvarchar"
-										}
-									},
-									{
-										"source": {
-											"name": "primary_keys_json",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "primary_keys_json",
-											"type": "String",
-											"physicalType": "nvarchar"
-										}
-									},
-									{
-										"source": {
-											"name": "foreign_keys_json",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "foreign_keys_json",
-											"type": "String",
-											"physicalType": "nvarchar"
-										}
-									},
-									{
-										"source": {
-											"name": "unique_keys_json",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "unique_keys_json",
-											"type": "String",
-											"physicalType": "nvarchar"
-										}
-									},
-									{
-										"source": {
-											"name": "raw_sql",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "raw_sql",
-											"type": "String",
-											"physicalType": "nvarchar"
-										}
-									}
-								],
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "ds_sql_metadata",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "ds_sqldb_rm",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"variables": {
-					"auditRecord": {
-						"type": "String"
-					}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_sql_metadata')]",
-				"[concat(variables('factoryId'), '/datasets/ds_sqldb_rm')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/PL_GetGitHubCsvs_To_SQL')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -274,6 +110,8 @@
 						"name": "OnlyCSVs",
 						"description": "'Account.csv,Department.csv,BusinessEntity.csv,BusinessEntityAddress.csv,PurchaseOrderHeader.csv,PurchaseOrderDetail.csv,TransactionHistory.csv , TransactionHistoryArchive.csv,ProductCostHistory.csv, ProductListPriceHistory.csv, ProductVendor.csv, Product.csv,Currency.csv , CurrencyRate.csv,Employee.csv, EmployeeDepartmentHistory.csv,Customer.csv, SalesOrderHeader.csv ,SalesOrderDetail.csv'",
 						"type": "Filter",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [
 							{
 								"activity": "GetRepoFileList",
@@ -297,6 +135,8 @@
 					{
 						"name": "ProcessEachCSV",
 						"type": "ForEach",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [
 							{
 								"activity": "OnlyCSVs",
@@ -814,6 +654,369 @@
 							],
 							"scriptBlockExecutionTimeout": "02:00:00"
 						}
+					},
+					{
+						"name": "Only_ResellerSales",
+						"description": "SalesOrderHeader.csv SalesOrderDetail.csv Customer.csv Store.csv BusinessEntity.csv BusinessEntityAddress.csv Address.csv StateProvince.csv CountryRegion.csv Product.csv ProductSubcategory.csv ProductCategory.csv ProductCostHistory.csv SpecialOffer.csv SpecialOfferProduct.csv SalesPerson.csv Employee.csv Person.csv Currency.csv CurrencyRate.csv SalesTerritory.csv SalesTerritoryHistory.csv ShipMethod.csv",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "GetRepoFileList",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('GetRepoFileList').output.value",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@and(endsWith(item().name, '.csv'),\n    contains(\n        'SalesOrderHeader.csv SalesOrderDetail.csv Customer.csv Store.csv BusinessEntity.csv BusinessEntityAddress.csv Address.csv StateProvince.csv CountryRegion.csv Product.csv ProductSubcategory.csv ProductCategory.csv ProductCostHistory.csv SpecialOffer.csv SpecialOfferProduct.csv SalesPerson.csv Employee.csv Person.csv Currency.csv CurrencyRate.csv SalesTerritory.csv SalesTerritoryHistory.csv ShipMethod.csv',\n        item().name\n    )\n)\n",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ResellerSales_CSV",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Only_ResellerSales",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Only_ResellerSales').output.Value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 1,
+							"activities": [
+								{
+									"name": "ResellerSales_CopyFileToRaw",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "ResellerSales_usp_UpsertPipelineFileAudit",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "HttpReadSettings",
+												"maxConcurrentConnections": 5,
+												"requestMethod": "GET",
+												"requestTimeout": ""
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_github_raw_file",
+											"type": "DatasetReference",
+											"parameters": {
+												"owner": "@pipeline().parameters.owner",
+												"repo": "@pipeline().parameters.repo",
+												"branch": "@pipeline().parameters.branch",
+												"path": "@item().path",
+												"fileName": "''"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_adls_raw_csv",
+											"type": "DatasetReference",
+											"parameters": {
+												"fileName": {
+													"value": "@item().name",
+													"type": "Expression"
+												},
+												"folderPath": {
+													"value": "@concat('raw/', pipeline().parameters.source_system, '/', formatDateTime(utcNow(),'yyyy/MM/dd'))\n",
+													"type": "Expression"
+												},
+												"delimiter": "','",
+												"hasHeader": "false"
+											}
+										}
+									]
+								},
+								{
+									"name": "ResellerSales_UpsertPipelineFileAudit",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "ResellerSales_CopyFileToRaw",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[dbo].[usp_UpsertPipelineFileAudit]",
+										"storedProcedureParameters": {
+											"Action": {
+												"value": "End",
+												"type": "String"
+											},
+											"TargetPath": {
+												"value": {
+													"value": "@concat('raw/', item().name)",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"TargetFileName": {
+												"value": {
+													"value": "@item().name",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"Status": {
+												"value": {
+													"value": "@activity('ResellerSales_CopyFileToRaw').Status",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"RowCount": {
+												"value": {
+													"value": "@if(\n  or(equals(activity('ResellerSales_CopyFileToRaw').Status,'Failed'), equals(activity('ResellerSales_CopyFileToRaw').output.filesWritten, null)),\n  null,\n  int(activity('ResellerSales_CopyFileToRaw').output.filesWritten)\n)\n",
+													"type": "Expression"
+												},
+												"type": "Int64"
+											},
+											"FileSizeBytes": {
+												"value": {
+													"value": "@if(\n  or(equals(activity('ResellerSales_CopyFileToRaw').Status,'Failed'), equals(activity('ResellerSales_CopyFileToRaw').output.dataWritten, null)),\n  null,\n  int(activity('ResellerSales_CopyFileToRaw').output.dataWritten)\n)\n",
+													"type": "Expression"
+												},
+												"type": "Int64"
+											},
+											"ErrorMessage": {
+												"value": {
+													"value": "@if(equals(activity('ResellerSales_CopyFileToRaw').Status,'Failed'), activity('ResellerSales_CopyFileToRaw').Error.Message, '')",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"ExtraJson": {
+												"value": {
+													"value": "@string(activity('ResellerSales_CopyFileToRaw').output)",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"RunId": {
+												"value": {
+													"value": "@pipeline().RunId",
+													"type": "Expression"
+												},
+												"type": "Guid"
+											},
+											"PipelineName": {
+												"value": {
+													"value": "@pipeline().Pipeline",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"ActivityName": {
+												"value": {
+													"value": "\"CopyFileToRaw\"",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"FailOnError": {
+												"value": "true",
+												"type": "Boolean"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_sqldb_rm_dev",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "ResellerSales_usp_UpsertPipelineFileAudit",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[dbo].[usp_UpsertPipelineFileAudit]",
+										"storedProcedureParameters": {
+											"RunId": {
+												"value": {
+													"value": "@pipeline().RunId",
+													"type": "Expression"
+												},
+												"type": "Guid"
+											},
+											"PipelineName": {
+												"value": {
+													"value": "@pipeline().Pipeline",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"ActivityName": {
+												"value": {
+													"value": "\"CopyFileToRaw\"",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"SourceSystem": {
+												"value": {
+													"value": "@pipeline().parameters.source_system",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"ProjectName": {
+												"value": {
+													"value": "@pipeline().parameters.project",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"RepoOwner": {
+												"value": {
+													"value": "@pipeline().parameters.owner",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"RepoName": {
+												"value": {
+													"value": "@pipeline().parameters.repo",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"RepoBranch": {
+												"value": {
+													"value": "@pipeline().parameters.branch",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"FileName": {
+												"value": {
+													"value": "@item().name",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"FilePath": {
+												"value": {
+													"value": "@concat('https://raw.githubusercontent.com/', pipeline().parameters.owner, '/', pipeline().parameters.repo, '/', pipeline().parameters.branch, '/', item().path)",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"SourceUrl": {
+												"value": {
+													"value": "@concat('https://raw.githubusercontent.com/', pipeline().parameters.owner, '/', pipeline().parameters.repo, '/', pipeline().parameters.branch, '/', if(contains(item().path, item().name), item().path, concat(item().path,'/', item().name)))",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"TargetFileName": {
+												"value": {
+													"value": "@item().name",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"ExtraJson": {
+												"value": {
+													"value": "@string(item())",
+													"type": "Expression"
+												},
+												"type": "String"
+											},
+											"Action": {
+												"value": "Start",
+												"type": "String"
+											},
+											"TargetPath": {
+												"value": {
+													"value": "@concat('raw/', item().name)",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_sqldb_rm_dev",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
 					}
 				],
 				"policy": {
@@ -855,6 +1058,170 @@
 				"[concat(variables('factoryId'), '/linkedServices/ls_sqldb_rm_dev')]",
 				"[concat(variables('factoryId'), '/datasets/ds_github_raw_file')]",
 				"[concat(variables('factoryId'), '/datasets/ds_adls_raw_csv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "sqltable_metadata",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "table_name",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "table_name",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "column_names_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "column_names_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "column_defs_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "column_defs_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "primary_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "primary_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "foreign_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "foreign_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "unique_keys_json",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "unique_keys_json",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									},
+									{
+										"source": {
+											"name": "raw_sql",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "raw_sql",
+											"type": "String",
+											"physicalType": "nvarchar"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_sql_metadata",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_sqldb_rm",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"auditRecord": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_sql_metadata')]",
+				"[concat(variables('factoryId'), '/datasets/ds_sqldb_rm')]"
 			]
 		},
 		{
@@ -1016,6 +1383,85 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_git_raw_http')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_sql_metadata')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_RM",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "output-onlinetools.txt",
+						"folderPath": "audit",
+						"fileSystem": "project"
+					},
+					"columnDelimiter": ";",
+					"escapeChar": "/",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "table_name",
+						"type": "String"
+					},
+					{
+						"name": "column_names_json",
+						"type": "String"
+					},
+					{
+						"name": "column_defs_json",
+						"type": "String"
+					},
+					{
+						"name": "primary_keys_json",
+						"type": "String"
+					},
+					{
+						"name": "foreign_keys_json",
+						"type": "String"
+					},
+					{
+						"name": "unique_keys_json",
+						"type": "String"
+					},
+					{
+						"name": "raw_sql",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_RM')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_sqldb_rm')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sqldb_rm_dev",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "sql_table_metadata"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sqldb_rm_dev')]"
 			]
 		},
 		{
@@ -1186,85 +1632,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/managedVirtualNetworks/default')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_sql_metadata')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_ADLS_RM",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "output-onlinetools.txt",
-						"folderPath": "audit",
-						"fileSystem": "project"
-					},
-					"columnDelimiter": ";",
-					"escapeChar": "/",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "table_name",
-						"type": "String"
-					},
-					{
-						"name": "column_names_json",
-						"type": "String"
-					},
-					{
-						"name": "column_defs_json",
-						"type": "String"
-					},
-					{
-						"name": "primary_keys_json",
-						"type": "String"
-					},
-					{
-						"name": "foreign_keys_json",
-						"type": "String"
-					},
-					{
-						"name": "unique_keys_json",
-						"type": "String"
-					},
-					{
-						"name": "raw_sql",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_RM')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_sqldb_rm')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_sqldb_rm_dev",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "sql_table_metadata"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_sqldb_rm_dev')]"
 			]
 		}
 	]
