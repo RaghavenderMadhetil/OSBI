@@ -1233,7 +1233,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"name": "[concat(parameters('factoryName'), '/PL_ResellerSales_Raw_To_Bronze')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1253,7 +1253,7 @@
 						"typeProperties": {
 							"source": {
 								"type": "AzureSqlSource",
-								"sqlReaderQuery": "\n-- view manifest\nSELECT \n    ManifestID, ModuleName, SourceFile, SourceDataFlow_fliename, Source_path, [Layer], [Target], Target_path, ProcessingPlatform,\n    include_layer, table_name, ModifiedDate_flage, ColumnList, CreatedAt\nFROM dbo.PipelineManifest\nWHERE Layer='Bronze'\nORDER BY ManifestID;",
+								"sqlReaderQuery": "\n-- view manifest\nSELECT \n    ManifestID, ModuleName, SourceFile, SourceDataFlow_fliename, Source_path, [Layer], [Target], Target_path, ProcessingPlatform,\n    include_layer, table_name, ModifiedDate_flage, ColumnList, CreatedAt\nFROM dbo.PipelineManifest\nWHERE Layer='Raw'\nORDER BY ManifestID;",
 								"queryTimeout": "02:00:00",
 								"partitionOption": "None"
 							},
@@ -1309,6 +1309,34 @@
 											"year_column": {
 												"value": "@item().ModifiedDate_flage",
 												"type": "Expression"
+											},
+											"table_name": {
+												"value": "@item().table_name",
+												"type": "Expression"
+											},
+											"direct_account_key": {
+												"value": "@pipeline().parameters.direct_account_key",
+												"type": "Expression"
+											},
+											"BASE_RAW_PATH": {
+												"value": "@item().Source_path",
+												"type": "Expression"
+											},
+											"BASE_BRONZE_PATH": {
+												"value": "@item().Target_path",
+												"type": "Expression"
+											},
+											"include_layer": {
+												"value": "false",
+												"type": "Expression"
+											},
+											"file_name": {
+												"value": "@item().SourceDataFlow_fliename",
+												"type": "Expression"
+											},
+											"layer": {
+												"value": "@item().include_layer",
+												"type": "Expression"
 											}
 										}
 									},
@@ -1323,6 +1351,12 @@
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"direct_account_key": {
+						"type": "string",
+						"defaultValue": "E4VB7pXWFXttUWbbSBPY35/Dvsw6Fs6XgIWLTj3lCS6v/jCEow9Uxs+r6Usobhenv14UdWEzb+R8+AStNyS0dg=="
+					}
 				},
 				"annotations": []
 			},
