@@ -267,42 +267,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Notebook1",
-						"type": "DatabricksNotebook",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebookPath": "/Repos/u2786997@uel.ac.uk/Repo/DataBricks/ETL-Framework/03_Run"
-						},
-						"linkedServiceName": {
-							"referenceName": "ls_adb_rm_de",
-							"type": "LinkedServiceReference"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adb_rm_de')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/ds_adls_raw_csv')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -366,6 +330,106 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_table')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_azuresql_PipelineManifest')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sqldb_rm_dev",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ManifestID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ModuleName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SourceFile",
+						"type": "nvarchar"
+					},
+					{
+						"name": "SourceDataFlow_fliename",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Source_path",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Layer",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Batch",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ParallelGroup",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Target",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Target_path",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ProcessingPlatform",
+						"type": "nvarchar"
+					},
+					{
+						"name": "DependencyType",
+						"type": "nvarchar"
+					},
+					{
+						"name": "DependencyStatus",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Dependencies",
+						"type": "nvarchar"
+					},
+					{
+						"name": "include_layer",
+						"type": "nvarchar"
+					},
+					{
+						"name": "table_name",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ModifiedDate_flage",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ColumnList",
+						"type": "nvarchar"
+					},
+					{
+						"name": "CreatedAt",
+						"type": "datetime2",
+						"scale": 7
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "PipelineManifest"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sqldb_rm_dev')]"
 			]
 		},
 		{
@@ -1700,6 +1764,105 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_sql_metadata')]",
 				"[concat(variables('factoryId'), '/datasets/ds_sqldb_rm')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupMetadata",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": "\n-- view manifest\nSELECT \n    ManifestID, ModuleName, SourceFile, SourceDataFlow_fliename, Source_path, [Layer], [Target], Target_path, ProcessingPlatform,\n    include_layer, table_name, ModifiedDate_flage, ColumnList, CreatedAt\nFROM dbo.PipelineManifest\nWHERE Layer='Bronze'\nORDER BY ManifestID;",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "ds_azuresql_PipelineManifest",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachFiles",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupMetadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupMetadata').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "RunDatabricksNotebook",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/Repos/u2786997@uel.ac.uk/Repo/DataBricks/ETL-Framework/03_Run",
+										"baseParameters": {
+											"domain": {
+												"value": "@item().ModuleName",
+												"type": "Expression"
+											},
+											"column_list": {
+												"value": "@item().ColumnList\n",
+												"type": "Expression"
+											},
+											"year_column": {
+												"value": "@item().ModifiedDate_flage",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_adb_rm_de",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_azuresql_PipelineManifest')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_adb_rm_de')]"
 			]
 		}
 	]
