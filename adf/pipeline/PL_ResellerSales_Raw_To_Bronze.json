@@ -1,5 +1,5 @@
 {
-	"name": "pipeline2",
+	"name": "PL_ResellerSales_Raw_To_Bronze",
 	"properties": {
 		"activities": [
 			{
