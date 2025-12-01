@@ -1,0 +1,95 @@
+{
+	"name": "ds_azuresql_PipelineManifest",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqldb_rm_dev",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ManifestID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "ModuleName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SourceFile",
+				"type": "nvarchar"
+			},
+			{
+				"name": "SourceDataFlow_fliename",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Source_path",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Layer",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Batch",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ParallelGroup",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Target",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Target_path",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ProcessingPlatform",
+				"type": "nvarchar"
+			},
+			{
+				"name": "DependencyType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "DependencyStatus",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Dependencies",
+				"type": "nvarchar"
+			},
+			{
+				"name": "include_layer",
+				"type": "nvarchar"
+			},
+			{
+				"name": "table_name",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ModifiedDate_flage",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ColumnList",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CreatedAt",
+				"type": "datetime2",
+				"scale": 7
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "PipelineManifest"
+		}
+	}
+}

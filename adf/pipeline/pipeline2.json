@@ -3,8 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Notebook1",
-				"type": "DatabricksNotebook",
+				"name": "LookupMetadata",
+				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -15,11 +15,72 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Repos/u2786997@uel.ac.uk/Repo/DataBricks/ETL-Framework/03_Run"
-				},
-				"linkedServiceName": {
-					"referenceName": "ls_adb_rm_de",
-					"type": "LinkedServiceReference"
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "\n-- view manifest\nSELECT \n    ManifestID, ModuleName, SourceFile, SourceDataFlow_fliename, Source_path, [Layer], [Target], Target_path, ProcessingPlatform,\n    include_layer, table_name, ModifiedDate_flage, ColumnList, CreatedAt\nFROM dbo.PipelineManifest\nWHERE Layer='Bronze'\nORDER BY ManifestID;",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "ds_azuresql_PipelineManifest",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachFiles",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupMetadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupMetadata').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "RunDatabricksNotebook",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Repos/u2786997@uel.ac.uk/Repo/DataBricks/ETL-Framework/03_Run",
+								"baseParameters": {
+									"domain": {
+										"value": "@item().ModuleName",
+										"type": "Expression"
+									},
+									"column_list": {
+										"value": "@item().ColumnList\n",
+										"type": "Expression"
+									},
+									"year_column": {
+										"value": "@item().ModifiedDate_flage",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "ls_adb_rm_de",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
 				}
 			}
 		],
