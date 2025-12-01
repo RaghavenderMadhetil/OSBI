@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "adfrgvkrm"
 		},
+		"ls_adb_rm_de_accessToken": {
+			"value": ""
+		},
 		"ls_adls_table_connectionString": {
 			"value": ""
 		},
@@ -22,6 +25,9 @@
 		},
 		"LS_GitHub_http_properties_typeProperties_url": {
 			"value": "https://api.github.com"
+		},
+		"ls_adb_rm_de_properties_typeProperties_existingClusterId": {
+			"value": "1130-072006-w0cclfqm"
 		},
 		"ls_git_raw_http_properties_typeProperties_url": {
 			"value": "https://raw.githubusercontent.com"

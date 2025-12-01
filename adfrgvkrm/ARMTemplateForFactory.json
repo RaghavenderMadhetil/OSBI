@@ -7,6 +7,10 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "adfrgvkrm"
 		},
+		"ls_adb_rm_de_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'ls_adb_rm_de'"
+		},
 		"ls_adls_table_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'ls_adls_table'"
@@ -30,6 +34,10 @@
 		"LS_GitHub_http_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://api.github.com"
+		},
+		"ls_adb_rm_de_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "1130-072006-w0cclfqm"
 		},
 		"ls_git_raw_http_properties_typeProperties_url": {
 			"type": "string",
@@ -1225,6 +1233,42 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Notebook1",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Repos/u2786997@uel.ac.uk/Repo/DataBricks/ETL-Framework/03_Run"
+						},
+						"linkedServiceName": {
+							"referenceName": "ls_adb_rm_de",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adb_rm_de')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_adls_raw_csv')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1507,6 +1551,30 @@
 					"url": "[parameters('LS_GitHub_http_properties_typeProperties_url')]",
 					"enableServerCertificateValidation": true,
 					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adb_rm_de')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-241853558342856.16.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('ls_adb_rm_de_accessToken')]"
+					},
+					"existingClusterId": "[parameters('ls_adb_rm_de_properties_typeProperties_existingClusterId')]"
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
